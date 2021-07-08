@@ -3,7 +3,7 @@ package battleship;
 public enum CellState {
     FOG('~'),
     YOUR_SHIP('O'),
-    HIT_SHIP('X'),
+    HIT_CELL('X'),
     MISS('M');
 
     public char symbol;

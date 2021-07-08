@@ -45,4 +45,28 @@ public class Game {
 
         return true;
     }
+
+    public void shoot() {
+        System.out.println("Take a shot!");
+
+        String coord = scanner.nextLine();
+        char letter = coord.charAt(0);
+        int number = Integer.parseInt(coord.replaceFirst(".", ""));
+
+        while (letter < 'A' || letter > 'J' || number < 1 || number > 10) {
+            System.out.println("Error! You entered the wrong coordinates! Try again:");
+            coord = scanner.nextLine();
+            letter = coord.charAt(0);
+            number = Integer.parseInt(coord.replaceFirst(".", ""));
+        }
+
+        boolean isHit = ship.shoot(new Coordinate(coord));
+        System.out.println(field);
+
+        if (isHit) {
+            System.out.println("You hit a ship!");
+        } else {
+            System.out.println("You missed!");
+        }
+    }
 }

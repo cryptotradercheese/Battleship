@@ -14,5 +14,12 @@ public class Main {
         game.placeShip(ShipType.SUBMARINE);
         game.placeShip(ShipType.CRUISER);
         game.placeShip(ShipType.DESTROYER);
+
+        System.out.println();
+        System.out.println("The game starts!");
+        System.out.println();
+        System.out.println(field);
+        System.out.println();
+        game.shoot();
     }
 }

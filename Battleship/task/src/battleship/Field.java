@@ -31,11 +31,11 @@ public class Field {
         return fieldString;
     }
 
-    public void setCell(int row, int column, CellState content) {
-        field[row][column] = content;
+    public void setCell(Coordinate coordinate, CellState content) {
+        field[coordinate.getRow()][coordinate.getColumn()] = content;
     }
 
-    public CellState getCell(int row, int column) {
-        return field[row][column];
+    public CellState getCell(Coordinate coordinate) {
+        return field[coordinate.getRow()][coordinate.getColumn()];
     }
 }
