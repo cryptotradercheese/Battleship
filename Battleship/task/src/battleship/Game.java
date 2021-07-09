@@ -1,19 +1,14 @@
 package battleship;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Game {
     private Scanner scanner = new Scanner(System.in);
-    private Field field;
-    Ship ship;
-
-    public Game(Field field) {
-        this.field = field;
-        this.ship = new Ship(field);
-    }
+    private Field field = new Field();
+    private Ship ship = new Ship(field);
 
     public void placeShip(ShipType shipType) {
-        System.out.println(field);
         System.out.printf("Enter the coordinates of the %s (%d cells):", shipType.name, shipType.length);
         System.out.println();
 
@@ -26,9 +21,11 @@ public class Game {
             second = new Coordinate(coordinates[1]);
         }
 
+        shipType.setCoordinates(first, second);
         ship.placeAbstractShip(first, second);
+
         System.out.println();
-        System.out.println(field);
+        System.out.println(revealAllShips());
     }
 
     public boolean canBePlaced(Coordinate first, Coordinate second, ShipType shipType) {
@@ -47,8 +44,6 @@ public class Game {
     }
 
     public void shoot() {
-        System.out.println("Take a shot!");
-
         String coord = scanner.nextLine();
         char letter = coord.charAt(0);
         int number = Integer.parseInt(coord.replaceFirst(".", ""));
@@ -61,12 +56,67 @@ public class Game {
         }
 
         boolean isHit = ship.shoot(new Coordinate(coord));
-        System.out.println(field);
+        showShellsOnly();
+        System.out.println();
 
         if (isHit) {
-            System.out.println("You hit a ship!");
+            System.out.println("You hit a ship! Try again:");
         } else {
-            System.out.println("You missed!");
+            System.out.println("You missed. Try again:");
         }
+    }
+
+    public String revealAllShips() {
+        String fieldString = "  1 2 3 4 5 6 7 8 9 10";
+
+        for (int i = 0; i < 10; i++) {
+            fieldString += System.lineSeparator() + (char) ('A' + i);
+
+            for (int j = 0; j < 10; j++) {
+                ArrayList<CellState> currentCell = field.getCell(new Coordinate(i, j));
+
+                if (currentCell.contains(CellState.HIT_CELL)) {
+                    fieldString += " " + CellState.HIT_CELL.symbol;
+                } else if (currentCell.contains(CellState.MISS)) {
+                    fieldString += " " + CellState.MISS.symbol;
+                } else if (currentCell.contains(CellState.YOUR_SHIP)) {
+                    fieldString += " " + CellState.YOUR_SHIP.symbol;
+                } else if (currentCell.contains(CellState.FOG)) {
+                    fieldString += " " + CellState.FOG.symbol;
+                }
+            }
+        }
+
+        return fieldString;
+    }
+
+    public void showShellsOnly() {
+        String fieldString = "  1 2 3 4 5 6 7 8 9 10";
+
+        for (int i = 0; i < 10; i++) {
+            fieldString += System.lineSeparator() + (char) ('A' + i);
+
+            for (int j = 0; j < 10; j++) {
+                ArrayList<CellState> currentCell = field.getCell(new Coordinate(i, j));
+
+                if (currentCell.contains(CellState.HIT_CELL)) {
+                    fieldString += " " + CellState.HIT_CELL.symbol;
+                } else if (currentCell.contains(CellState.MISS)) {
+                    fieldString += " " + CellState.MISS.symbol;
+                } else if (currentCell.contains(CellState.FOG)) {
+                    fieldString += " " + CellState.FOG.symbol;
+                }
+            }
+        }
+
+        System.out.println(fieldString);
+    }
+
+    public void printField() {
+        System.out.println(field);
+    }
+
+    public boolean isFinished() {
+        return field.isGameFinished();
     }
 }

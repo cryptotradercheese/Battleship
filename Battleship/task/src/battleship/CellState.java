@@ -6,7 +6,7 @@ public enum CellState {
     HIT_CELL('X'),
     MISS('M');
 
-    public char symbol;
+    public final char symbol;
 
     CellState(char symbol) {
         this.symbol = symbol;

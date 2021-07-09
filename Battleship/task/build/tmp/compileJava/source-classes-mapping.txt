@@ -1,13 +1,13 @@
 battleship/Coordinate.java
  battleship.Coordinate
-battleship/ShipType.java
- battleship.ShipType
 battleship/CellState.java
  battleship.CellState
 battleship/Main.java
  battleship.Main
 battleship/Game.java
  battleship.Game
+battleship/ShipType.java
+ battleship.ShipType
 battleship/Ship.java
  battleship.Ship
 battleship/Field.java

@@ -14,7 +14,7 @@ public class Ship {
                     i <= Math.max(first.getColumn(), second.getColumn());
                     i++
             ) {
-                field.setCell(new Coordinate(first.getRow(), i), CellState.YOUR_SHIP);
+                field.getCell(new Coordinate(first.getRow(), i)).add(CellState.YOUR_SHIP);
             }
         } else if (first.getColumn() == second.getColumn()) {
             for (
@@ -22,7 +22,7 @@ public class Ship {
                     i <= Math.max(first.getRow(), second.getRow());
                     i++
             ) {
-                field.setCell(new Coordinate(i, first.getColumn()), CellState.YOUR_SHIP);
+                field.getCell(new Coordinate(i, first.getColumn())).add(CellState.YOUR_SHIP);
             }
         } else {
             throw new IllegalArgumentException("Illegal placement");
@@ -51,7 +51,7 @@ public class Ship {
         for (int i = Math.min(first.getRow(), second.getRow()) - 1; i <= Math.max(first.getRow(), second.getRow()) + 1; i++) {
             for (int j = Math.min(first.getColumn(), second.getColumn()) - 1; j <= Math.max(first.getColumn(), second.getColumn()) + 1; j++) {
                 if (i >= 0 && i <+ 9 && j >= 0 && j <= 9) {
-                    if (field.getCell(new Coordinate(i, j)) == CellState.YOUR_SHIP) {
+                    if (field.getCell(new Coordinate(i, j)).contains(CellState.YOUR_SHIP)) {
                         return false;
                     }
                 }
@@ -62,11 +62,11 @@ public class Ship {
     }
 
     public boolean shoot(Coordinate coordinate) {
-        if (field.getCell(coordinate) == CellState.YOUR_SHIP) {
-            field.setCell(coordinate, CellState.HIT_CELL);
+        if (field.getCell(coordinate).contains(CellState.YOUR_SHIP)) {
+            field.getCell(coordinate).add(CellState.HIT_CELL);
             return true;
         } else {
-            field.setCell(coordinate, CellState.MISS);
+            field.getCell(coordinate).add(CellState.MISS);
             return false;
         }
     }
