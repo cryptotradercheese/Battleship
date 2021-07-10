@@ -381,6 +381,409 @@ files:
         }
     }
   learner_created: false
+- name: src/battleship/Coordinate.java
+  visible: true
+  text: |
+    package battleship;
+
+    public class Coordinate {
+        private int row;
+        private int column;
+
+        public Coordinate(String coordinate) {
+            char letter = coordinate.charAt(0);
+            int number = Integer.parseInt(coordinate.replaceFirst(".", ""));
+
+            if (letter < 'A' || letter > 'J' || number < 1 || number > 10) {
+                throw new IllegalArgumentException("Illegal coordinate");
+            }
+
+            this.row  = letter - 'A';
+            this.column = number - 1;
+        }
+
+        public Coordinate(int row, int column) {
+            if (row < 0 || row > 9 || column < 0 || column > 9) {
+                throw new IllegalArgumentException("Illegal coordinate");
+            }
+
+            this.row = row;
+            this.column = column;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public int getColumn() {
+            return column;
+        }
+    }
+  learner_created: true
+- name: src/battleship/ShipType.java
+  visible: true
+  text: |
+    package battleship;
+
+    public enum ShipType {
+        AIRCRAFT_CARRIER("Aircraft Carrier", 5),
+        BATTLESHIP("Battleship", 4),
+        SUBMARINE("Submarine", 3),
+        CRUISER("Cruiser", 3),
+        DESTROYER("Destroyer", 2);
+
+        public final String name;
+        public final int length;
+        private Coordinate first;
+        private Coordinate second;
+
+        ShipType(String name, int length) {
+            this.name = name;
+            this.length = length;
+        }
+
+        public void setCoordinates(Coordinate first, Coordinate second) {
+            if (
+                    first.getRow() != second.getRow() && first.getColumn() != second.getColumn() ||
+                    first.getRow() == second.getRow() && first.getColumn() == second.getColumn()
+            ) {
+                throw new IllegalArgumentException();
+            }
+
+            if (first.getRow() < second.getRow() || first.getColumn() < second.getColumn()) {
+                this.first = first;
+                this.second = second;
+            } else {
+                this.first = second;
+                this.second = first;
+            }
+        }
+
+        public boolean isSank(Field field) {
+            for (int i = first.getRow(); i <= second.getRow(); i++) {
+                for (int j = first.getColumn(); j <= second.getColumn(); j++) {
+                    if (!field.getCell(new Coordinate(i, j)).contains(CellState.HIT_CELL)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+  learner_created: true
+- name: src/battleship/Field.java
+  visible: true
+  text: |
+    package battleship;
+
+    import java.util.ArrayList;
+
+    public class Field {
+        private ArrayList<CellState>[][] field;
+
+        public Field() {
+            initField();
+        }
+
+        public void initField() {
+            field = new ArrayList[10][10];
+
+            for (int i = 0; i < field.length; i++) {
+                for (int j = 0; j < field[0].length; j++) {
+                    field[i][j] = new ArrayList<>();
+                    field[i][j].add(CellState.FOG);
+                }
+            }
+        }
+
+        public ArrayList<CellState> getCell(Coordinate coordinate) {
+            return field[coordinate.getRow()][coordinate.getColumn()];
+        }
+
+        public boolean isGameFinished() {
+            if (
+                    ShipType.AIRCRAFT_CARRIER.isSank(this) &&
+                    ShipType.BATTLESHIP.isSank(this) &&
+                    ShipType.SUBMARINE.isSank(this) &&
+                    ShipType.CRUISER.isSank(this) &&
+                    ShipType.DESTROYER.isSank(this)
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            String fieldString = "  1 2 3 4 5 6 7 8 9 10";
+
+            for (int i = 0; i < field.length; i++) {
+                fieldString += System.lineSeparator() + (char) ('A' + i);
+
+                for (int j = 0; j < field[0].length; j++) {
+                    ArrayList<CellState> currentCell = field[i][j];
+
+                    if (currentCell.contains(CellState.HIT_CELL)) {
+                        fieldString += " " + CellState.HIT_CELL.symbol;
+                    } else if (currentCell.contains(CellState.MISS)) {
+                        fieldString += " " + CellState.MISS.symbol;
+                    } else if (currentCell.contains(CellState.FOG)) {
+                        fieldString += " " + CellState.FOG.symbol;
+                    } else if (currentCell.contains(CellState.YOUR_SHIP)) {
+                        fieldString += " " + CellState.YOUR_SHIP.symbol;
+                    }
+                }
+            }
+
+            return fieldString;
+        }
+    }
+  learner_created: true
+- name: src/battleship/CellState.java
+  visible: true
+  text: |-
+    package battleship;
+
+    public enum CellState {
+        FOG('~'),
+        YOUR_SHIP('O'),
+        HIT_CELL('X'),
+        MISS('M');
+
+        public final char symbol;
+
+        CellState(char symbol) {
+            this.symbol = symbol;
+        }
+    }
+  learner_created: true
+- name: src/battleship/Ship.java
+  visible: true
+  text: |
+    package battleship;
+
+    public class Ship {
+        private Field field;
+
+        public Ship(Field field) {
+            this.field = field;
+        }
+
+        public void placeAbstractShip(Coordinate first, Coordinate second) {
+            if (first.getRow() == second.getRow()) {
+                for (
+                        int i = Math.min(first.getColumn(), second.getColumn());
+                        i <= Math.max(first.getColumn(), second.getColumn());
+                        i++
+                ) {
+                    field.getCell(new Coordinate(first.getRow(), i)).add(CellState.YOUR_SHIP);
+                }
+            } else if (first.getColumn() == second.getColumn()) {
+                for (
+                        int i = Math.min(first.getRow(), second.getRow());
+                        i <= Math.max(first.getRow(), second.getRow());
+                        i++
+                ) {
+                    field.getCell(new Coordinate(i, first.getColumn())).add(CellState.YOUR_SHIP);
+                }
+            } else {
+                throw new IllegalArgumentException("Illegal placement");
+            }
+        }
+
+        public int getLength(Coordinate first, Coordinate second) {
+            if (first.getRow() == second.getRow()) {
+                return Math.abs(first.getColumn() - second.getColumn()) + 1;
+            } else if (first.getColumn() == second.getColumn()) {
+                return Math.abs(first.getRow() - second.getRow()) + 1;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+
+        public boolean isLegalForm(Coordinate first, Coordinate second) {
+            if (first.getRow() != second.getRow() && first.getColumn() != second.getColumn()) {
+                return false;
+            }
+
+            return true;
+        }
+
+        public boolean isLegalRoom(Coordinate first, Coordinate second) {
+            for (int i = Math.min(first.getRow(), second.getRow()) - 1; i <= Math.max(first.getRow(), second.getRow()) + 1; i++) {
+                for (int j = Math.min(first.getColumn(), second.getColumn()) - 1; j <= Math.max(first.getColumn(), second.getColumn()) + 1; j++) {
+                    if (i >= 0 && i <+ 9 && j >= 0 && j <= 9) {
+                        if (field.getCell(new Coordinate(i, j)).contains(CellState.YOUR_SHIP)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public boolean shoot(Coordinate coordinate) {
+            if (field.getCell(coordinate).contains(CellState.YOUR_SHIP)) {
+                field.getCell(coordinate).add(CellState.HIT_CELL);
+                return true;
+            } else {
+                field.getCell(coordinate).add(CellState.MISS);
+                return false;
+            }
+        }
+    }
+  learner_created: true
+- name: src/battleship/Game.java
+  visible: true
+  text: |
+    package battleship;
+
+    import java.util.ArrayList;
+    import java.util.Scanner;
+
+    public class Game {
+        private Scanner scanner = new Scanner(System.in);
+        private Field field = new Field();
+        private Ship ship = new Ship(field);
+
+        public void placeShip(ShipType shipType) {
+            System.out.printf("Enter the coordinates of the %s (%d cells):", shipType.name, shipType.length);
+            System.out.println();
+
+            String[] coordinates = scanner.nextLine().split(" ");
+            Coordinate first = new Coordinate(coordinates[0]);
+            Coordinate second = new Coordinate(coordinates[1]);
+            while (!canBePlaced(first, second, shipType)) {
+                coordinates = scanner.nextLine().split(" ");
+                first = new Coordinate(coordinates[0]);
+                second = new Coordinate(coordinates[1]);
+            }
+
+            shipType.setCoordinates(first, second);
+            ship.placeAbstractShip(first, second);
+
+            System.out.println();
+            System.out.println(revealAllShips());
+        }
+
+        public boolean canBePlaced(Coordinate first, Coordinate second, ShipType shipType) {
+            if (!ship.isLegalForm(first, second)) {
+                System.out.println("Error! Wrong ship location! Try again:");
+                return false;
+            } else if (ship.getLength(first, second) != shipType.length) {
+                System.out.println("Error! Wrong length of the " + shipType.name + "! Try again:");
+                return false;
+            } else if (!ship.isLegalRoom(first, second)) {
+                System.out.println("Error! You placed it too close to another one. Try again:");
+                return false;
+            }
+
+            return true;
+        }
+
+        public void shoot() {
+            String coord = scanner.nextLine();
+            char letter = coord.charAt(0);
+            int number = Integer.parseInt(coord.replaceFirst(".", ""));
+
+            while (letter < 'A' || letter > 'J' || number < 1 || number > 10) {
+                System.out.println("Error! You entered the wrong coordinates! Try again:");
+                coord = scanner.nextLine();
+                letter = coord.charAt(0);
+                number = Integer.parseInt(coord.replaceFirst(".", ""));
+            }
+
+            boolean isHit = ship.shoot(new Coordinate(coord));
+            showShellsOnly();
+            System.out.println();
+
+            if (isHit) {
+                System.out.println("You hit a ship! Try again:");
+            } else {
+                System.out.println("You missed. Try again:");
+            }
+        }
+
+        public String revealAllShips() {
+            String fieldString = "  1 2 3 4 5 6 7 8 9 10";
+
+            for (int i = 0; i < 10; i++) {
+                fieldString += System.lineSeparator() + (char) ('A' + i);
+
+                for (int j = 0; j < 10; j++) {
+                    ArrayList<CellState> currentCell = field.getCell(new Coordinate(i, j));
+
+                    if (currentCell.contains(CellState.HIT_CELL)) {
+                        fieldString += " " + CellState.HIT_CELL.symbol;
+                    } else if (currentCell.contains(CellState.MISS)) {
+                        fieldString += " " + CellState.MISS.symbol;
+                    } else if (currentCell.contains(CellState.YOUR_SHIP)) {
+                        fieldString += " " + CellState.YOUR_SHIP.symbol;
+                    } else if (currentCell.contains(CellState.FOG)) {
+                        fieldString += " " + CellState.FOG.symbol;
+                    }
+                }
+            }
+
+            return fieldString;
+        }
+
+        public void showShellsOnly() {
+            String fieldString = "  1 2 3 4 5 6 7 8 9 10";
+
+            for (int i = 0; i < 10; i++) {
+                fieldString += System.lineSeparator() + (char) ('A' + i);
+
+                for (int j = 0; j < 10; j++) {
+                    ArrayList<CellState> currentCell = field.getCell(new Coordinate(i, j));
+
+                    if (currentCell.contains(CellState.HIT_CELL)) {
+                        fieldString += " " + CellState.HIT_CELL.symbol;
+                    } else if (currentCell.contains(CellState.MISS)) {
+                        fieldString += " " + CellState.MISS.symbol;
+                    } else if (currentCell.contains(CellState.FOG)) {
+                        fieldString += " " + CellState.FOG.symbol;
+                    }
+                }
+            }
+
+            System.out.println(fieldString);
+        }
+
+        public void printField() {
+            System.out.println(field);
+        }
+
+        public boolean isFinished() {
+            return field.isGameFinished();
+        }
+    }
+  learner_created: true
+- name: src/battleship/AircraftCarrier.java
+  visible: true
+  learner_created: true
+- name: src/battleship/Battleship.java
+  visible: true
+  learner_created: true
+- name: src/battleship/ShipPlacer.java
+  visible: true
+  learner_created: true
+- name: src/battleship/Submarine.java
+  visible: true
+  learner_created: true
+- name: src/battleship/Cruiser.java
+  visible: true
+  learner_created: true
+- name: src/battleship/Destroyer.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/125/stages/667/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Sat, 10 Jul 2021 10:43:53 UTC
 record: -1

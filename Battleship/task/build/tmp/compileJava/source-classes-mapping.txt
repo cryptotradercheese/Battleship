@@ -1,14 +1,26 @@
-battleship/Coordinate.java
- battleship.Coordinate
 battleship/CellState.java
  battleship.CellState
-battleship/Main.java
- battleship.Main
-battleship/Game.java
- battleship.Game
+battleship/Coordinate.java
+ battleship.Coordinate
+battleship/AircraftCarrier.java
+ battleship.AircraftCarrier
+battleship/ShipPlacer.java
+ battleship.ShipPlacer
+battleship/Battleship.java
+ battleship.Battleship
+battleship/Cruiser.java
+ battleship.Cruiser
+battleship/Destroyer.java
+ battleship.Destroyer
+battleship/Submarine.java
+ battleship.Submarine
 battleship/ShipType.java
  battleship.ShipType
 battleship/Ship.java
  battleship.Ship
 battleship/Field.java
  battleship.Field
+battleship/Game.java
+ battleship.Game
+battleship/Main.java
+ battleship.Main

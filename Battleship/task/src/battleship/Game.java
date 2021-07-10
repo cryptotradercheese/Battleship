@@ -5,42 +5,48 @@ import java.util.Scanner;
 
 public class Game {
     private Scanner scanner = new Scanner(System.in);
-    private Field field = new Field();
-    private Ship ship = new Ship(field);
+    private Field field1 = new Field();
+    private ShipPlacer shipPlacer1 = new ShipPlacer(field1);
+    private Field field2 = new Field();
+    private ShipPlacer shipPlacer2 = new ShipPlacer(field2);
+    private int turn = 1;
+    private Field currentField = field1;
+    private ShipPlacer currentShipPlacer = shipPlacer1;
 
-    public void placeShip(ShipType shipType) {
-        System.out.printf("Enter the coordinates of the %s (%d cells):", shipType.name, shipType.length);
-        System.out.println();
+    public void switchPlayer() {
+        System.out.println("Press Enter and pass the move to another player");
+        scanner.nextLine();
 
-        String[] coordinates = scanner.nextLine().split(" ");
-        Coordinate first = new Coordinate(coordinates[0]);
-        Coordinate second = new Coordinate(coordinates[1]);
-        while (!canBePlaced(first, second, shipType)) {
-            coordinates = scanner.nextLine().split(" ");
-            first = new Coordinate(coordinates[0]);
-            second = new Coordinate(coordinates[1]);
-        }
-
-        shipType.setCoordinates(first, second);
-        ship.placeAbstractShip(first, second);
-
-        System.out.println();
-        System.out.println(revealAllShips());
+        switchTurn();
     }
 
-    public boolean canBePlaced(Coordinate first, Coordinate second, ShipType shipType) {
-        if (!ship.isLegalForm(first, second)) {
-            System.out.println("Error! Wrong ship location! Try again:");
-            return false;
-        } else if (ship.getLength(first, second) != shipType.length) {
-            System.out.println("Error! Wrong length of the " + shipType.name + "! Try again:");
-            return false;
-        } else if (!ship.isLegalRoom(first, second)) {
-            System.out.println("Error! You placed it too close to another one. Try again:");
-            return false;
+    public void switchTurn() {
+        if (currentField == field1) {
+            currentField = field2;
+        } else if (currentField == field2) {
+            currentField = field1;
         }
 
-        return true;
+        if (currentShipPlacer == shipPlacer1) {
+            currentShipPlacer = shipPlacer2;
+        } else if (currentShipPlacer == shipPlacer2) {
+            currentShipPlacer = shipPlacer1;
+        }
+
+        if (turn == 1) {
+            turn = 2;
+        } else if (turn == 2) {
+            turn = 1;
+        }
+    }
+
+    public int getTurn() {
+        return turn;
+    }
+
+    public void placeShip(ShipType shipType) {
+        currentShipPlacer.place(shipType);
+        revealAllShips();
     }
 
     public void shoot() {
@@ -54,26 +60,46 @@ public class Game {
             letter = coord.charAt(0);
             number = Integer.parseInt(coord.replaceFirst(".", ""));
         }
+        Coordinate coordinate = new Coordinate(coord);
 
-        boolean isHit = ship.shoot(new Coordinate(coord));
-        showShellsOnly();
-        System.out.println();
+        switchTurn();
+
+        boolean isHit;
+        if (currentField.getCell(coordinate).contains(CellState.YOUR_SHIP)) {
+            currentField.getCell(coordinate).add(CellState.HIT_CELL);
+            isHit = true;
+        } else {
+            currentField.getCell(coordinate).add(CellState.MISS);
+            isHit = false;
+        }
 
         if (isHit) {
-            System.out.println("You hit a ship! Try again:");
+            if (
+                    currentShipPlacer.isSunk(ShipType.AIRCRAFT_CARRIER) ||
+                    currentShipPlacer.isSunk(ShipType.BATTLESHIP) ||
+                    currentShipPlacer.isSunk(ShipType.SUBMARINE) ||
+                    currentShipPlacer.isSunk(ShipType.CRUISER) ||
+                    currentShipPlacer.isSunk(ShipType.DESTROYER)
+            ) {
+                System.out.println("You sank a ship!");
+            } else {
+                System.out.println("You hit a ship!");
+            }
         } else {
-            System.out.println("You missed. Try again:");
+            System.out.println("You missed!");
         }
+
+        switchTurn();
     }
 
-    public String revealAllShips() {
+    public void revealAllShips() {
         String fieldString = "  1 2 3 4 5 6 7 8 9 10";
 
         for (int i = 0; i < 10; i++) {
             fieldString += System.lineSeparator() + (char) ('A' + i);
 
             for (int j = 0; j < 10; j++) {
-                ArrayList<CellState> currentCell = field.getCell(new Coordinate(i, j));
+                ArrayList<CellState> currentCell = currentField.getCell(new Coordinate(i, j));
 
                 if (currentCell.contains(CellState.HIT_CELL)) {
                     fieldString += " " + CellState.HIT_CELL.symbol;
@@ -87,36 +113,34 @@ public class Game {
             }
         }
 
-        return fieldString;
-    }
-
-    public void showShellsOnly() {
-        String fieldString = "  1 2 3 4 5 6 7 8 9 10";
-
-        for (int i = 0; i < 10; i++) {
-            fieldString += System.lineSeparator() + (char) ('A' + i);
-
-            for (int j = 0; j < 10; j++) {
-                ArrayList<CellState> currentCell = field.getCell(new Coordinate(i, j));
-
-                if (currentCell.contains(CellState.HIT_CELL)) {
-                    fieldString += " " + CellState.HIT_CELL.symbol;
-                } else if (currentCell.contains(CellState.MISS)) {
-                    fieldString += " " + CellState.MISS.symbol;
-                } else if (currentCell.contains(CellState.FOG)) {
-                    fieldString += " " + CellState.FOG.symbol;
-                }
-            }
-        }
-
         System.out.println(fieldString);
     }
 
     public void printField() {
-        System.out.println(field);
+        System.out.println(currentField);
+    }
+
+    public void printBothFields() {
+        switchTurn();
+        printField();
+        switchTurn();
+        System.out.println("---------------------");
+        revealAllShips();
     }
 
     public boolean isFinished() {
-        return field.isGameFinished();
+        if (currentShipPlacer.isGameFinished()) {
+            return true;
+        }
+
+        switchTurn();
+
+        if (currentShipPlacer.isGameFinished()) {
+            return true;
+        }
+
+        switchTurn();
+
+        return false;
     }
 }

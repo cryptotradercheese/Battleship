@@ -1,36 +1,39 @@
 package battleship;
 
-import java.util.Scanner;
-
 public class Main {
 
     public static void main(String[] args) {
-        final Scanner scanner = new Scanner(System.in);
         Game game = new Game();
 
-        game.printField();
-        System.out.println();
+        // Ships placement
+        for (int i = 0; i < 2; i++) {
+            System.out.printf("Player %d, place your ships to the game field", game.getTurn());
+            System.out.println();
+            game.printField();
+            System.out.println();
 
-        game.placeShip(ShipType.AIRCRAFT_CARRIER);
-        game.placeShip(ShipType.BATTLESHIP);
-        game.placeShip(ShipType.SUBMARINE);
-        game.placeShip(ShipType.CRUISER);
-        game.placeShip(ShipType.DESTROYER);
-
-        System.out.println();
-        System.out.println("The game starts!");
-        System.out.println();
-        game.showShellsOnly();
-        System.out.println();
-        System.out.println("Take a shot!");
-        System.out.println();
+            game.placeShip(ShipType.AIRCRAFT_CARRIER);
+            game.placeShip(ShipType.BATTLESHIP);
+            game.placeShip(ShipType.SUBMARINE);
+            game.placeShip(ShipType.CRUISER);
+            game.placeShip(ShipType.DESTROYER);
+            game.switchPlayer();
+        }
 
         while (!game.isFinished()) {
+            System.out.println();
+            game.printBothFields();
+            System.out.println();
+            System.out.printf("Player %d, it's your turn:", game.getTurn());
+            System.out.println();
             game.shoot();
+
+            if (!game.isFinished()) {
+                game.switchPlayer();
+            }
             System.out.println();
         }
 
-        game.showShellsOnly();
-        System.out.println("You sank the last ship. You won. Congratulations!");
+        System.out.printf("Player %d, you sank the last ship. You won. Congratulations!", game.getTurn());
     }
 }
